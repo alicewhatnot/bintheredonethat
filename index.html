@@ -34,6 +34,10 @@
         #addPinForm button {
             margin-top: 15px;
         }
+
+        #date {
+
+        }
     </style>
 </head>
 
@@ -207,17 +211,19 @@
 
             const popup = `
                 <div>
-                    <h3>${date}</h3>
-
                     <img
                         src="${photoURL}"
-                        style="width: 200px; max-width: 100%;"
+                        style="width: 30rem; max-width: 100%;"
                     >
+                    <p style="text-decoration: underline; margin-bottom: 0;">
+                        ${date}
+                    </p>
                 </div>
             `;
 
-
-            marker.bindPopup(popup);
+            marker.bindPopup(popup, {
+                maxWidth: 500
+            });
 
 
             // Close the form
