@@ -13,7 +13,7 @@
             width: 100%;
         }
 
-        #addLocationForm {
+        #addPinForm {
             display: none;
             position: fixed;
             top: 50%;
@@ -26,12 +26,12 @@
             z-index: 1000;
         }
 
-        #addLocationForm label {
+        #addPinForm label {
             display: block;
             margin-top: 10px;
         }
 
-        #addLocationForm button {
+        #addPinForm button {
             margin-top: 15px;
         }
     </style>
@@ -43,34 +43,33 @@
 
     <div id="map"></div>
 
-    <div id="locate">
-        <button onclick="locateUser()" id="locateButton">
-            Locate
-        </button>
-
-        <button onclick="showAddLocation()" id="addLocationButton">
-            Add Location
+    <div id="controls">
+        <button onclick="startAddPin()" id="addPinButton">
+            Add Pin
         </button>
     </div>
 
 
-    <!-- Add Location form -->
+    <!-- Add Pin form -->
 
-    <div id="addLocationForm">
+    <div id="addPinForm">
 
-        <h2>Add Location</h2>
+        <h2>Add Pin</h2>
+
         <label>
             Photo:
-            <input type="file" id="locationPhoto" accept="image/*">
+            <input type="file"
+                   id="pinPhoto"
+                   accept="image/*">
         </label>
 
         <br>
 
-        <button onclick="addLocation()">
-            Add Location
+        <button onclick="addPin()">
+            Add Pin
         </button>
 
-        <button onclick="closeAddLocation()">
+        <button onclick="closeAddPin()">
             Cancel
         </button>
 
@@ -98,19 +97,22 @@
         }).addTo(map);
 
 
-        // Stores the user's current location
+        // Stores the location while creating a pin
 
-        let userLocation = null;
+        let pinLocation = null;
 
 
-        // Find user's location
+        // Start creating a pin
 
-        function locateUser() {
+        function startAddPin() {
+
+            // Ask the browser for the user's location
 
             map.locate({
-                setView: true,
-                maxZoom: 18
+                setView: false,
+                enableHighAccuracy: true
             });
+
         }
 
 
@@ -118,12 +120,13 @@
 
         map.on('locationfound', function(e) {
 
-            userLocation = e.latlng;
+            // Store the coordinates
 
-            L.marker(e.latlng)
-                .addTo(map)
-                .bindPopup("You are here!")
-                .openPopup();
+            pinLocation = e.latlng;
+
+            // Show the Add Pin form
+
+            document.getElementById("addPinForm").style.display = "block";
 
         });
 
@@ -137,60 +140,36 @@
         });
 
 
-        // Open the Add Location form
-
-        function showAddLocation() {
-
-            if (userLocation === null) {
-
-                alert("Please locate yourself first.");
-
-                return;
-            }
-
-            document.getElementById("addLocationForm").style.display = "block";
-
-        }
-
-
         // Close the form
 
-        function closeAddLocation() {
+        function closeAddPin() {
 
-            document.getElementById("addLocationForm").style.display = "none";
+            document.getElementById("addPinForm").style.display = "none";
+
+            // Clear selected photo
+
+            document.getElementById("pinPhoto").value = "";
+
+            pinLocation = null;
 
         }
 
 
-        // Add the location
+        // Create the pin
 
-        function addLocation() {
+        function addPin() {
 
-            if (userLocation === null) {
+            if (pinLocation === null) {
 
                 alert("Location not found.");
 
                 return;
+
             }
 
 
-            const today = new Date();
-
-            const date =
-                String(today.getDate()).padStart(2, '0') + '/' +
-                String(today.getMonth() + 1).padStart(2, '0') + '/' +
-                String(today.getFullYear()).slice(-2);
-                
             const photo =
-                document.getElementById("locationPhoto").files[0];
-
-
-            if (date === "") {
-
-                alert("Please select a date.");
-
-                return;
-            }
+                document.getElementById("pinPhoto").files[0];
 
 
             if (!photo) {
@@ -198,10 +177,21 @@
                 alert("Please select a photo.");
 
                 return;
+
             }
 
 
-            // Turn the photo into a temporary URL
+            // Get today's date
+
+            const today = new Date();
+
+            const date =
+                String(today.getDate()).padStart(2, '0') + '/' +
+                String(today.getMonth() + 1).padStart(2, '0') + '/' +
+                String(today.getFullYear()).slice(-2);
+
+
+            // Create temporary URL for the photo
 
             const photoURL =
                 URL.createObjectURL(photo);
@@ -209,7 +199,7 @@
 
             // Create the marker
 
-            const marker = L.marker(userLocation)
+            const marker = L.marker(pinLocation)
                 .addTo(map);
 
 
@@ -232,7 +222,7 @@
 
             // Close the form
 
-            closeAddLocation();
+            closeAddPin();
 
         }
 
