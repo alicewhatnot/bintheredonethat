@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>My Map</title>
+    <title>Bin There Done That</title>
 
     <link rel="stylesheet"
           href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -12,10 +12,33 @@
             height: 500px;
             width: 100%;
         }
+
+        #addLocationForm {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            z-index: 1000;
+        }
+
+        #addLocationForm label {
+            display: block;
+            margin-top: 10px;
+        }
+
+        #addLocationForm button {
+            margin-top: 15px;
+        }
     </style>
 </head>
 
 <body>
+
     <h1>Bin There Done That</h1>
 
     <div id="map"></div>
@@ -24,11 +47,40 @@
         <button onclick="locateUser()" id="locateButton">
             Locate
         </button>
+
+        <button onclick="showAddLocation()" id="addLocationButton">
+            Add Location
+        </button>
     </div>
+
+
+    <!-- Add Location form -->
+
+    <div id="addLocationForm">
+
+        <h2>Add Location</h2>
+        <label>
+            Photo:
+            <input type="file" id="locationPhoto" accept="image/*">
+        </label>
+
+        <br>
+
+        <button onclick="addLocation()">
+            Add Location
+        </button>
+
+        <button onclick="closeAddLocation()">
+            Cancel
+        </button>
+
+    </div>
+
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <script>
+
         const bounds = [
             [56.30, -2.90],
             [56.38, -2.70]
@@ -40,12 +92,21 @@
             minZoom: 14
         }).fitBounds(bounds);
 
+
         L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; OpenStreetMap contributors'
         }).addTo(map);
 
 
+        // Stores the user's current location
+
+        let userLocation = null;
+
+
+        // Find user's location
+
         function locateUser() {
+
             map.locate({
                 setView: true,
                 maxZoom: 18
@@ -53,17 +114,129 @@
         }
 
 
+        // Location successfully found
+
         map.on('locationfound', function(e) {
+
+            userLocation = e.latlng;
+
             L.marker(e.latlng)
                 .addTo(map)
                 .bindPopup("You are here!")
                 .openPopup();
+
         });
 
+
+        // Location failed
 
         map.on('locationerror', function(e) {
+
             alert("Could not find your location: " + e.message);
+
         });
+
+
+        // Open the Add Location form
+
+        function showAddLocation() {
+
+            if (userLocation === null) {
+
+                alert("Please locate yourself first.");
+
+                return;
+            }
+
+            document.getElementById("addLocationForm").style.display = "block";
+
+        }
+
+
+        // Close the form
+
+        function closeAddLocation() {
+
+            document.getElementById("addLocationForm").style.display = "none";
+
+        }
+
+
+        // Add the location
+
+        function addLocation() {
+
+            if (userLocation === null) {
+
+                alert("Location not found.");
+
+                return;
+            }
+
+
+            const today = new Date();
+
+            const date =
+                String(today.getDate()).padStart(2, '0') + '/' +
+                String(today.getMonth() + 1).padStart(2, '0') + '/' +
+                String(today.getFullYear()).slice(-2);
+                
+            const photo =
+                document.getElementById("locationPhoto").files[0];
+
+
+            if (date === "") {
+
+                alert("Please select a date.");
+
+                return;
+            }
+
+
+            if (!photo) {
+
+                alert("Please select a photo.");
+
+                return;
+            }
+
+
+            // Turn the photo into a temporary URL
+
+            const photoURL =
+                URL.createObjectURL(photo);
+
+
+            // Create the marker
+
+            const marker = L.marker(userLocation)
+                .addTo(map);
+
+
+            // Create the popup
+
+            const popup = `
+                <div>
+                    <h3>${date}</h3>
+
+                    <img
+                        src="${photoURL}"
+                        style="width: 200px; max-width: 100%;"
+                    >
+                </div>
+            `;
+
+
+            marker.bindPopup(popup);
+
+
+            // Close the form
+
+            closeAddLocation();
+
+        }
+
     </script>
+
 </body>
 </html>
